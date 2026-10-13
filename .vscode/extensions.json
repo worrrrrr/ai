@@ -1,3 +1,7 @@
 {
+<<<<<<< HEAD
 	"recommendations": ["svelte.svelte-vscode", "esbenp.prettier-vscode", "bradlc.vscode-tailwindcss"]
+=======
+	"recommendations": ["svelte.svelte-vscode", "bradlc.vscode-tailwindcss", "esbenp.prettier-vscode"]
+>>>>>>> f9cfb12f8bd2928b2632b8fcdb7c608fd60c9727
 }

@@ -14,7 +14,13 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
+<<<<<<< HEAD
 			adapter: adapter()
+=======
+			adapter: adapter({
+				platformProxy: { persist: true, configPath: 'wrangler.jsonc' }
+			})
+>>>>>>> f9cfb12f8bd2928b2632b8fcdb7c608fd60c9727
 		})
 	]
 });
