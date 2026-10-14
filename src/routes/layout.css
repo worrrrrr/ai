@@ -1,1 +1,344 @@
 @import 'tailwindcss';
+
+/* ---------------------------------------------------------------------------
+   หลักการ: ทุกอย่างที่ "หน้าตา" ต้องถูกกำหนดได้ตอนรัน ไม่ใช่ค่าตายตัวในไฟล์นี้
+
+   ไฟล์นี้มีหน้าที่แค่ 2 อย่าง
+   1) ประกาศ "สัญญา" ของตัวแปร (ชื่อ + ค่าตั้งต้น) ที่ส่วนอื่นของแอปเขียนทับได้
+   2) ให้ค่าเริ่มต้นที่สมเหตุสมผลเมื่อผู้ใช้ยังไม่ได้ตั้งอะไร
+
+   ชั้นที่เขียนทับได้ เรียงจากต่ำไปสูง
+   a) ค่าตั้งต้นในไฟล์นี้
+   b) ธีมสว่าง/มืด -> light-dark() ตอบตาม data-theme ที่ <html> โดยไม่ต้องมี CSS ชุดที่สอง
+   c) ค่าที่ผู้ใช้ตั้งไว้ (ตาราง settings / styles) -> inline style บน <html> จาก +layout.svelte
+      เช่น style="--brand: oklch(...); --panel-radius: 1rem; --sidebar-width: 19rem"
+
+   ห้าม hardcode สี/ขนาดใน component ให้ใช้ตัวแปรเหล่านี้เท่านั้น (ผ่าน utility ของ Tailwind
+   เช่น bg-surface, text-ink-muted, rounded-panel, shadow-raised)
+--------------------------------------------------------------------------- */
+
+/* dark: variant ของ Tailwind ผูกกับ data-theme ที่ <html> เสมอ
+   ("auto" ต้องถูก resolve เป็น light|dark ก่อน paint ใน app.html ไม่ปล่อยให้ลอย) */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+:root {
+	/* โหมดสีของคอนโทรลพื้นฐาน (สกอลบาร์, caret, date picker) ตามค่าที่ resolve แล้ว */
+	color-scheme: light;
+
+	/* --- พื้นผิว -------------------------------------------------------- */
+	--surface-canvas: light-dark(oklch(0.985 0.002 255), oklch(0.19 0.012 255));
+	--surface-raised: light-dark(oklch(1 0 0), oklch(0.235 0.014 255));
+	--surface-sunken: light-dark(oklch(0.965 0.004 255), oklch(0.165 0.012 255));
+	--surface-hover: light-dark(oklch(0.955 0.006 255), oklch(0.275 0.016 255));
+
+	/* --- เส้นแบ่ง ------------------------------------------------------- */
+	--line-subtle: light-dark(oklch(0.925 0.005 255), oklch(0.31 0.015 255));
+	--line-strong: light-dark(oklch(0.86 0.008 255), oklch(0.4 0.018 255));
+
+	/* --- ตัวอักษร -------------------------------------------------------- */
+	--ink-primary: light-dark(oklch(0.24 0.012 255), oklch(0.95 0.004 255));
+	--ink-secondary: light-dark(oklch(0.46 0.014 255), oklch(0.78 0.01 255));
+	--ink-muted: light-dark(oklch(0.62 0.012 255), oklch(0.62 0.012 255));
+	--ink-inverted: light-dark(oklch(0.99 0 0), oklch(0.19 0.012 255));
+
+	/* --- สีสื่อความหมาย -------------------------------------------------- */
+	--brand: light-dark(oklch(0.55 0.16 258), oklch(0.72 0.13 258));
+	--brand-strong: light-dark(oklch(0.48 0.17 258), oklch(0.79 0.12 258));
+	--brand-soft: light-dark(oklch(0.95 0.03 258), oklch(0.32 0.06 258));
+	--danger: light-dark(oklch(0.55 0.19 25), oklch(0.7 0.15 25));
+	--danger-soft: light-dark(oklch(0.95 0.04 25), oklch(0.31 0.07 25));
+	--success: light-dark(oklch(0.6 0.13 155), oklch(0.74 0.12 155));
+	--warning: light-dark(oklch(0.72 0.15 75), oklch(0.8 0.13 75));
+
+	/* --- ฟอนต์: ต้องมีฟอนต์ไทยในสแตก เพราะ UI เป็นไทย --------------------- */
+	--font-stack-sans:
+		'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, 'Noto Sans Thai',
+		'Leelawadee UI', 'Sarabun', sans-serif;
+	--font-stack-mono: 'Cascadia Code', 'JetBrains Mono', Consolas, 'Noto Sans Mono Thai', monospace;
+
+	/* --- ขนาด/ระยะ: ปรับได้จาก settings/layout (เช่น โหมดกะทัดรัด) -------- */
+	--sidebar-width: 17rem;
+	--column-max: 46rem;
+	--panel-radius: 0.75rem;
+	--control-radius: 0.5rem;
+	--density: 1; /* ตัวคูณระยะห่างแนวตั้งของรายการ/ข้อความ */
+	--message-gap: calc(1.25rem * var(--density));
+
+	/* --- เงา ------------------------------------------------------------- */
+	--elevation-raised: light-dark(
+		0 1px 2px oklch(0.2 0.02 255 / 0.06),
+		0 1px 2px oklch(0 0 0 / 0.4)
+	);
+	--elevation-popover: light-dark(
+		0 10px 30px oklch(0.2 0.02 255 / 0.14),
+		0 10px 30px oklch(0 0 0 / 0.5)
+	);
+}
+
+/* ผู้ใช้เลือกธีมเอง -> บังคับโหมดของคอนโทรลให้ตรง (โทเค็นตามไปเองผ่าน light-dark()) */
+:root[data-theme='dark'] {
+	color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+	color-scheme: light;
+}
+
+/* ---------------------------------------------------------------------------
+   map โทเค็นเข้า namespace ของ Tailwind
+   ได้ utility: bg-canvas bg-surface bg-sunken bg-hover bg-brand, border-line border-edge,
+   text-ink text-ink-secondary text-ink-muted, rounded-panel rounded-control,
+   shadow-raised shadow-popover ฯลฯ — ทุกตัวอ่านค่าจากตัวแปร จึงเปลี่ยนตอนรันได้
+--------------------------------------------------------------------------- */
+
+@theme inline {
+	--color-canvas: var(--surface-canvas);
+	--color-surface: var(--surface-raised);
+	--color-sunken: var(--surface-sunken);
+	--color-hover: var(--surface-hover);
+
+	--color-line: var(--line-subtle);
+	--color-edge: var(--line-strong);
+
+	--color-ink: var(--ink-primary);
+	--color-ink-secondary: var(--ink-secondary);
+	--color-ink-muted: var(--ink-muted);
+	--color-ink-inverted: var(--ink-inverted);
+
+	--color-brand: var(--brand);
+	--color-brand-strong: var(--brand-strong);
+	--color-brand-soft: var(--brand-soft);
+	--color-danger: var(--danger);
+	--color-danger-soft: var(--danger-soft);
+	--color-success: var(--success);
+	--color-warning: var(--warning);
+
+	--font-sans: var(--font-stack-sans);
+	--font-mono: var(--font-stack-mono);
+
+	--radius-panel: var(--panel-radius);
+	--radius-control: var(--control-radius);
+
+	--shadow-raised: var(--elevation-raised);
+	--shadow-popover: var(--elevation-popover);
+}
+
+/* ---------------------------------------------------------------------------
+   ค่าพื้นฐาน
+--------------------------------------------------------------------------- */
+
+@layer base {
+	html {
+		-webkit-text-size-adjust: 100%;
+	}
+
+	body {
+		background-color: var(--surface-canvas);
+		color: var(--ink-primary);
+		font-family: var(--font-stack-sans);
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+	}
+
+	:focus-visible {
+		outline: 2px solid var(--brand);
+		outline-offset: 2px;
+	}
+
+	::selection {
+		background: var(--brand-soft);
+		color: var(--ink-primary);
+	}
+
+	/* คอนโทรลของเบราว์เซอร์ต้องใช้ฟอนต์เดียวกับแอป (สำคัญกับข้อความไทย) */
+	button,
+	input,
+	textarea,
+	select {
+		font: inherit;
+		color: inherit;
+	}
+
+	/* textarea ยืดตามเนื้อหาเองถ้าเบราว์เซอร์รองรับ (มี JS fallback ใน AutoGrowTextarea) */
+	textarea {
+		field-sizing: content;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		*,
+		*::before,
+		*::after {
+			animation-duration: 0.01ms !important;
+			animation-iteration-count: 1 !important;
+			transition-duration: 0.01ms !important;
+		}
+	}
+}
+
+/* ---------------------------------------------------------------------------
+   โครงหน้า (layout scaffold)
+--------------------------------------------------------------------------- */
+
+/* เปลือกแอป: sidebar + เนื้อหา — จอเล็กยุบเป็นคอลัมน์เดียว
+   จำนวนคอลัมน์/ความกว้างมาจากตัวแปร จึงปรับได้ตอนรัน */
+@utility app-shell {
+	display: grid;
+	grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+	min-height: 100dvh;
+
+	@media (max-width: 60rem) {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+/* ซ่อน sidebar โดยไม่ทำ layout กระโดด (ใช้ตอนผู้ใช้ย่อ) */
+@utility sidebar-hidden {
+	grid-template-columns: 0 minmax(0, 1fr);
+}
+
+@utility chat-column {
+	width: 100%;
+	max-width: var(--column-max);
+	margin-inline: auto;
+	padding-inline: 1rem;
+}
+
+@utility composer-dock {
+	position: sticky;
+	bottom: 0;
+	background: linear-gradient(to top, var(--surface-canvas) 72%, transparent);
+}
+
+@utility scroll-slim {
+	scrollbar-width: thin;
+	scrollbar-color: var(--line-strong) transparent;
+
+	&::-webkit-scrollbar {
+		width: 10px;
+		height: 10px;
+	}
+
+	&::-webkit-scrollbar-thumb {
+		background: var(--line-strong);
+		background-clip: content-box;
+		border: 3px solid transparent;
+		border-radius: 999px;
+	}
+
+	&::-webkit-scrollbar-thumb:hover {
+		background: var(--ink-muted);
+		background-clip: content-box;
+	}
+}
+
+/* ---------------------------------------------------------------------------
+   เนื้อหาข้อความที่ render จาก markdown
+--------------------------------------------------------------------------- */
+
+@utility message-prose {
+	font-size: 0.9375rem;
+	line-height: 1.7;
+	overflow-wrap: anywhere;
+
+	& > * + * {
+		margin-top: 0.75rem;
+	}
+
+	& h1,
+	& h2,
+	& h3,
+	& h4 {
+		font-weight: 600;
+		line-height: 1.3;
+	}
+
+	& h1 {
+		font-size: 1.25rem;
+	}
+
+	& h2 {
+		font-size: 1.125rem;
+	}
+
+	& h3 {
+		font-size: 1rem;
+	}
+
+	& ul {
+		list-style: disc;
+		padding-inline-start: 1.25rem;
+	}
+
+	& ol {
+		list-style: decimal;
+		padding-inline-start: 1.25rem;
+	}
+
+	& li + li {
+		margin-top: 0.25rem;
+	}
+
+	& a {
+		color: var(--brand);
+		text-decoration: underline;
+		text-underline-offset: 2px;
+	}
+
+	& strong {
+		font-weight: 600;
+	}
+
+	& code {
+		font-family: var(--font-stack-mono);
+		font-size: 0.875em;
+		background: var(--surface-sunken);
+		border: 1px solid var(--line-subtle);
+		border-radius: 0.3rem;
+		padding: 0.1em 0.35em;
+	}
+
+	& pre {
+		background: var(--surface-sunken);
+		border: 1px solid var(--line-subtle);
+		border-radius: var(--panel-radius);
+		padding: 0.75rem 1rem;
+		overflow-x: auto;
+	}
+
+	& pre code {
+		background: none;
+		border: 0;
+		padding: 0;
+		font-size: 0.875rem;
+		line-height: 1.6;
+	}
+
+	& blockquote {
+		border-inline-start: 3px solid var(--line-strong);
+		padding-inline-start: 0.75rem;
+		color: var(--ink-secondary);
+	}
+
+	& table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.9em;
+	}
+
+	& th,
+	& td {
+		border: 1px solid var(--line-subtle);
+		padding: 0.35rem 0.5rem;
+		text-align: start;
+	}
+
+	& th {
+		background: var(--surface-sunken);
+		font-weight: 600;
+	}
+
+	& hr {
+		border: 0;
+		border-top: 1px solid var(--line-subtle);
+	}
+}
