@@ -7,3 +7,7 @@ bun.lockb
 
 # Miscellaneous
 /static/
+
+# Generated files (ห้ามแก้ด้วยมือ)
+worker-configuration.d.ts
+.svelte-kit/

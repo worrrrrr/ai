@@ -1,7 +1,13 @@
 {
 	"extends": "$app/tsconfig",
 	"compilerOptions": {
-		"strict": true
+		"strict": true,
+		"types": ["$app/types", "./worker-configuration.d.ts"],
+		// $app/tsconfig เปิด allowJs + checkJs ไว้ ทำให้ JS ที่ generate ถูก type check ด้วย:
+		// worker-configuration.d.ts อ้าง mainModule -> .svelte-kit/cloudflare/_worker.js
+		// -> .svelte-kit/cloudflare-tmp/server.js -> .svelte-kit/output/server/** ทั้งต้นไม้
+		// ผลคือ svelte-check รายงาน error หลายร้อยตัวจากโค้ดที่เราไม่ได้เขียนเอง
+		"checkJs": false
 	},
 	"include": ["src", "vite.config.ts"]
 }

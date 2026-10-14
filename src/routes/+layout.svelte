@@ -1,13 +1,11 @@
-<script lang="ts">
+<script>
+	import { createAIContext } from '@ai-sdk/svelte';
 	import './layout.css';
-	import favicon from '#lib/assets/favicon.svg';
-	import type { LayoutProps } from './$types';
+	let { children } = $props();
 
-	let { children }: LayoutProps = $props();
+	createAIContext();
+	// all hooks created after this or in components that are children of this component
+	// will have synchronized state
 </script>
-
-<svelte:head>
-	<link rel="icon" href={favicon} />
-</svelte:head>
 
 {@render children()}
