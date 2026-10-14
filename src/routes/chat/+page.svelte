@@ -1,5 +1,5 @@
 <script lang="ts">
-	let { data } = $props();
+	let { data, form } = $props();
 </script>
 
 <main>
@@ -9,6 +9,10 @@
 		<button type="submit">เริ่มแชทใหม่</button>
 	</form>
 
+	{#if form?.message}
+		<p role="alert">{form.message}</p>
+	{/if}
+
 	{#if data.chats.length === 0}
 		<p>ยังไม่มีแชท</p>
 	{:else}
@@ -16,6 +20,17 @@
 			{#each data.chats as chat (chat.id)}
 				<li>
 					<a href={`/chat/${chat.id}`}>{chat.title}</a>
+
+					<form method="POST" action="?/rename">
+						<input type="hidden" name="id" value={chat.id} />
+						<input name="title" value={chat.title} aria-label="ชื่อแชท" />
+						<button type="submit">เปลี่ยนชื่อ</button>
+					</form>
+
+					<form method="POST" action="?/delete">
+						<input type="hidden" name="id" value={chat.id} />
+						<button type="submit">ลบ</button>
+					</form>
 				</li>
 			{/each}
 		</ul>

@@ -29,5 +29,40 @@ export const actions = {
 		}
 
 		redirect(303, `/chat/${data.id}`);
+	},
+
+	rename: async ({ request, locals }) => {
+		if (!locals.user) redirect(303, '/auth');
+
+		const form = await request.formData();
+		const id = String(form.get('id') ?? '');
+		const title = String(form.get('title') ?? '').trim();
+
+		if (!id) return fail(400, { message: 'ไม่พบแชทที่ต้องการเปลี่ยนชื่อ' });
+		if (!title) return fail(400, { message: 'ชื่อแชทต้องไม่ว่าง' });
+
+		// RLS จำกัดให้แก้ได้เฉพาะแถวของผู้ใช้เองอยู่แล้ว
+		const { error } = await locals.supabase
+			.from('chats')
+			.update({ title: title.slice(0, 120) })
+			.eq('id', id);
+
+		if (error) return fail(500, { message: error.message });
+
+		return { renamed: id };
+	},
+
+	delete: async ({ request, locals }) => {
+		if (!locals.user) redirect(303, '/auth');
+
+		const form = await request.formData();
+		const id = String(form.get('id') ?? '');
+		if (!id) return fail(400, { message: 'ไม่พบแชทที่ต้องการลบ' });
+
+		// messages ถูกลบตามด้วย foreign key on delete cascade
+		const { error } = await locals.supabase.from('chats').delete().eq('id', id);
+		if (error) return fail(500, { message: error.message });
+
+		return { deleted: id };
 	}
 };
