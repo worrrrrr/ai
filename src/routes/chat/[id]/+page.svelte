@@ -2,6 +2,8 @@
 	import { Chat } from '@ai-sdk/svelte';
 	import { invalidateAll } from '$app/navigation';
 	import { untrack } from 'svelte';
+	import Composer from '#lib/components/Composer.svelte';
+	import MessageList from '#lib/components/MessageList.svelte';
 
 	let { data } = $props();
 
@@ -14,43 +16,15 @@
 		messages,
 		onFinish: () => invalidateAll()
 	});
-
-	let input = $state('');
-
-	function handleSubmit(event: SubmitEvent) {
-		event.preventDefault();
-		const text = input.trim();
-		if (!text) return;
-		chat.sendMessage({ text });
-		input = '';
-	}
 </script>
 
-<main>
-	<header>
-		<a href="/chat">กลับไปรายการแชท</a>
-		<h1>{data.title}</h1>
-	</header>
+<header class="flex items-center gap-3 border-b border-line px-4 py-3">
+	<h1 class="truncate text-sm font-medium">{data.title}</h1>
+	<a class="ms-auto shrink-0 text-xs text-ink-muted transition-colors hover:text-ink" href="/chat">
+		รายการแชท
+	</a>
+</header>
 
-	<ul>
-		{#each chat.messages as message (message.id)}
-			<li>
-				<div>{message.role}</div>
-				<div>
-					{#each message.parts as part, partIndex (partIndex)}
-						{#if part.type === 'text'}
-							<div>{part.text}</div>
-						{:else if part.type.startsWith('tool-')}
-							<pre>{JSON.stringify(part, null, 2)}</pre>
-						{/if}
-					{/each}
-				</div>
-			</li>
-		{/each}
-	</ul>
+<MessageList messages={chat.messages} status={chat.status} />
 
-	<form onsubmit={handleSubmit}>
-		<input bind:value={input} />
-		<button type="submit" disabled={chat.status !== 'ready'}>Send</button>
-	</form>
-</main>
+<Composer {chat} />
