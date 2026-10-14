@@ -15,11 +15,7 @@ To recreate this project with the same configuration:
 
 ```sh
 # recreate this project
-<<<<<<< HEAD
-pnpm dlx sv@1.1.1 create --template minimal --types ts --add prettier tailwindcss="plugins:none" enhanced-img sveltekit-adapter="adapter:cloudflare+cfTarget:workers" --install pnpm ./
-=======
-pnpm dlx sv@1.1.1 create --template minimal --types ts --add tailwindcss="plugins:none" sveltekit-adapter="adapter:cloudflare+cfTarget:workers" enhanced-img prettier --install pnpm ./
->>>>>>> f9cfb12f8bd2928b2632b8fcdb7c608fd60c9727
+pnpm dlx sv@1.1.1 create --template minimal --types ts --add prettier tailwindcss="plugins:none" enhanced-img sveltekit-adapter="adapter:auto" experimental="features:async,remoteFunctions" --install pnpm ./
 ```
 
 ## Adding features
@@ -56,3 +52,5 @@ npm run build
 ```
 
 You can preview the production build with `npm run preview`.
+
+> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.

@@ -1,9 +1,3 @@
 allowBuilds:
-<<<<<<< HEAD
   sharp: true
-  workerd: true
-=======
-  workerd: true
-  sharp: true
->>>>>>> f9cfb12f8bd2928b2632b8fcdb7c608fd60c9727
   esbuild: true
