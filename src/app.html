@@ -1,9 +1,26 @@
 <!doctype html>
-<html lang="en">
+<html lang="th">
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="text-scale" content="scale" />
+		<script>
+			// ตั้งธีมก่อน paint กันจอวาบ: cookie ล่าสุดจากที่ผู้ใช้กด -> ไม่งั้นตามระบบ
+			// ค่าที่เก็บในฐานข้อมูลจะทับทีหลังได้โดยไม่ต้องแก้สคริปต์นี้
+			(() => {
+				const match = document.cookie.match(/(?:^|;\s*)theme=(light|dark|auto)/);
+				const choice = match ? match[1] : 'auto';
+				const resolved =
+					choice === 'auto'
+						? window.matchMedia('(prefers-color-scheme: dark)').matches
+							? 'dark'
+							: 'light'
+						: choice;
+				const root = document.documentElement;
+				root.dataset.theme = resolved;
+				root.dataset.themeChoice = choice;
+			})();
+		</script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">
