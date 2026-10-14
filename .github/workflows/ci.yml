@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # ต้องรันบนต้นไม้สะอาดเท่านั้น: worker-configuration.d.ts ที่ wrangler สร้าง
+      # จะมี mainModule เมื่อมี .svelte-kit/cloudflare/_worker.js อยู่แล้ว
+      - name: Generated Worker types are current
+        run: pnpm gen:check
+
+      - name: Type and Svelte check
+        run: pnpm check
+
+      - name: Formatting
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
