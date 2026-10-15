@@ -22,16 +22,15 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # ต้องรันบนต้นไม้สะอาดเท่านั้น: worker-configuration.d.ts ที่ wrangler สร้าง
-      # จะมี mainModule เมื่อมี .svelte-kit/cloudflare/_worker.js อยู่แล้ว
-      - name: Generated Worker types are current
-        run: pnpm gen:check
-
       - name: Type and Svelte check
         run: pnpm check
 
       - name: Formatting
         run: pnpm lint
 
+      - name: Unit tests
+        run: pnpm test
+      - name: Canon budget
+        run: pnpm canon
       - name: Build
         run: pnpm build

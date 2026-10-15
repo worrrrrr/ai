@@ -2,18 +2,24 @@ import { createServerClient } from '@supabase/ssr';
 import { redirect, type RequestHandler } from '@sveltejs/kit';
 import { sequence, type Handle } from '@sveltejs/kit/hooks';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY } from '$app/env/public';
+import type { Database } from '#lib/database.types.ts';
 
 const supabase: Handle = async ({ event, resolve }) => {
-	event.locals.supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
-		cookies: {
-			getAll: () => event.cookies.getAll(),
-			setAll: (cookiesToSet) => {
-				cookiesToSet.forEach(({ name, value, options }) => {
-					event.cookies.set(name, value, { ...options, path: '/' });
-				});
+	// ใส่ type ของฐานข้อมูลจริง -> query ผิดตาราง/ผิดคอลัมน์จะถูกจับตอน `pnpm check`
+	event.locals.supabase = createServerClient<Database>(
+		PUBLIC_SUPABASE_URL,
+		PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+		{
+			cookies: {
+				getAll: () => event.cookies.getAll(),
+				setAll: (cookiesToSet) => {
+					cookiesToSet.forEach(({ name, value, options }) => {
+						event.cookies.set(name, value, { ...options, path: '/' });
+					});
+				}
 			}
 		}
-	});
+	);
 
 	event.locals.safeGetSession = async () => {
 		const {

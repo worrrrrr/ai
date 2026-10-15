@@ -1,3 +1,14 @@
+-- ⚠️ ห้ามรันไฟล์นี้ — เป็นแบบร่างรุ่นแรก (2026-10-14) ที่ไม่ตรงกับฐานข้อมูลจริง
+--
+-- ฐานข้อมูลจริงของโปรเจกต์ (`aaii`, ref gozxohjfseacplnwgtbn) ใช้
+--   chats(id, owner_id -> profiles.id, title, icon, pinned, project_id, deleted_at, ...)
+--   chat_messages(id, chat_id, user_id, role, content, reasoning, model, provider, tokens, duration_ms, ...)
+-- คือเก็บข้อความเป็นข้อความแบน (content + reasoning) ไม่ใช่ `parts jsonb` และเจ้าของคือ `owner_id`
+-- ไม่ใช่ `user_id`; ไม่มีตาราง `messages` ในฐานข้อมูล
+--
+-- เก็บไฟล์นี้ไว้เป็นประวัติการตัดสินใจเท่านั้น — source of truth คือ schema จริงในโปรเจกต์ Supabase
+-- (ดู type ที่ generate ได้ที่ src/lib/database.types.ts)
+
 -- ประวัติแชทของผู้ใช้แต่ละคน
 -- วิธีใช้: Supabase Dashboard -> SQL Editor -> วางทั้งไฟล์ -> Run
 

@@ -17,7 +17,12 @@
 {#if chromeless}
 	{@render children()}
 {:else}
-	<AppShell user={data.user} chats={data.chats} settings={data.settings}>
+	<AppShell
+		user={data.user}
+		chats={data.chats}
+		settings={data.settings}
+		stylePreset={data.stylePreset}
+	>
 		{@render children()}
 	</AppShell>
 {/if}

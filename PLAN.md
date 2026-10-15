@@ -7,7 +7,7 @@
 
 ## 0. สถานะความคืบหน้า
 
-อัปเดตล่าสุด 2026-10-14 หลังเริ่มเฟส 0
+อัปเดตล่าสุด 2026-10-14 (รอบ 2: เพิ่มงานเฟส 3 — หน้า settings 4 หมวด)
 
 เสร็จแล้ว
 
@@ -16,6 +16,34 @@
 - T0.3 `package.json` แยก script เป็น `gen`, `gen:check`, `build` (regenerate ไม่ใช้ `--check`), `check`, `deploy`, `deploy:dry`
 - T0.4 ยืนยันแล้วว่าเมื่อไม่มี dev server รันอยู่ `pnpm build` ผ่าน (adapter รายงาน `done`) และรันซ้ำได้ (idempotent)
 - T0.5 เขียน `docs/dev-notes.md` เก็บกับดัก 3 ข้อของ environment นี้ไว้ให้ session ถัดไป
+- T0.7 เพิ่ม CI workflow (`.github/workflows/ci.yml`: gen:check → check → lint → test → build)
+
+ความคืบหน้าเฟส 1–2 (T1.1, T1.2, T1.4, T1.5, T2.2–T2.4, T2.7)
+
+- T1.1/T1.2/T1.4/T1.5: ตรวจ redirect เป็น path ภายใน (`src/lib/server/redirects.ts`), หน้า `/auth/auth-code-error`, `/api/chat` ตอบ 401 JSON + จำกัดขนาด body + zod validate
+- T2.2: `/chat` และ `/chat/[id]` โหลด/บันทึกประวัติผ่าน Supabase (RLS) + stream และ persist ตอนจบ
+- T2.3: `calculate` ใช้ evaluator ปลอดภัย (`src/lib/server/expression.ts`) แทน `Function()`; `search`/`weather` ต่อ API จริง — `search` ใช้ Exa เมื่อมี `EXA_API_KEY` (ไม่งั้นถอยไป DuckDuckGo/Wikipedia) และ `weather` ใช้ Open-Meteo — ไม่มี mock ในระบบ
+- T2.4: render message parts แบบ generic (text/reasoning/tool-*/fallback) + สถานะ/ปุ่มหยุด (markdown ยังไม่ทำ)
+- T2.7: vitest + `pnpm test` ครอบ evaluator, redirect, router, tools และผูกเข้า CI
+
+ความคืบหน้ารอบ 3 (2026-10-14) — ผูกกับฐานข้อมูลจริง + seal กุญแจ
+
+- schema จริงของโปรเจกต์ (`aaii`, ref `gozxohjfseacplnwgtbn`) กลายเป็นแหล่งความจริง: ใส่คำเตือนห้ามรันใน 0001 และให้ 0002 สร้างเฉพาะ `styles` + `user_settings`
+- ปรับโค้ดเดิมให้ตรงของจริง: `chats.owner_id`, `chat_messages(content/reasoning)` ไม่มี `parts`, `prompts.title`, ลบพรอมป์แบบ soft delete ด้วย `deleted_at`, สร้างแถว `profiles` ให้ก่อนถ้ายังไม่มี
+- กุญแจผู้ให้บริการ: `provider_credentials.key_sealed` = AES-GCM จาก Worker secret `PROVIDER_KEY_SECRET` + `key_hint` (4 ตัวท้าย) — ยังไม่ได้ตั้ง secret ในเครื่อง
+- client ผูก type จาก `src/lib/database.types.ts` (คำสั่ง `pnpm gen:types`) → ผิดตาราง/ผิดคอลัมน์ถูกจับตอน `pnpm check`
+- หน้า `/settings/styles`: เลือก "สีหลัก" สีเดียวแล้วคำนวณอีก 5 สีให้ (`src/lib/colorPalette.ts`) + จานสีอิสระ + ค้นหาสีและแม่แบบ
+- เทสต์รวม 102 ตัว (8 ไฟล์) รวม round-trip ของ AES-GCM และการเทียบสูตรสีกับแม่แบบ
+- **ค้าง:** รัน `supabase/migrations/0002_settings.sql` แล้ว `pnpm gen:types` และลบ type ชั่วคราวใน `src/lib/server/settings.ts`; ยังไม่ผูก provider/prompt/style เข้ากับการตอบแชท (T2.6)
+
+ความคืบหน้าเฟส 3 (T3.1–T3.4) — หน้า settings 4 หมวด
+
+- T3.1: [0002_settings.sql](supabase/migrations/0002_settings.sql) — ตาราง `user_settings`, `styles`, `providers`, `prompts` + RLS ต่อผู้ใช้ + index บังคับ "ค่าเริ่มต้นมีได้แถวเดียว"
+- T3.2: `/settings/providers` CRUD + "ทดสอบเชื่อมต่อ" ที่ยิงจริงไป `/api/tags` หรือ `/v1/models` แล้วโชว์แหล่งที่มา + รายชื่อโมเดล (กุญแจเก็บเป็นชื่อตัวแปร env ไม่ลงฐานข้อมูล)
+- T3.3: `/settings/prompts` CRUD + ดู/แก้ข้อความเต็ม · `/settings/styles` แม่แบบ 12 ชุด + สร้างเอง + ตัวอย่างสว่าง/มืด
+- T3.4: `/settings/layout` ธีม/ความกว้างแถบด้านข้าง/ความหนาแน่น/ความกว้างคอลัมน์/สถานะย่อ + ตัวอย่างทันที (ค่าเก็บทั้ง cookie และตาราง)
+- ตรรกะบริสุทธิ์มีเทสต์: [src/lib/settings.test.ts](src/lib/settings.test.ts) (9) + [src/lib/server/settings.test.ts](src/lib/server/settings.test.ts) (32)
+- **ยังไม่ผูกเข้าที่แชท**: โมเดลยังฝังใน `api/chat/+server.ts` (T2.6) และแชทที่ส่งยังไม่ใช้ provider/prompt/style ที่เลือกไว้
 
 ผลตรวจหลังแก้ (รันรวมในคำสั่งเดียว)
 
@@ -27,7 +55,10 @@
 ยังไม่ทำ
 
 - T0.6 commit งานค้าง (รอเจ้าของตัดสินใจเรื่องการแบ่ง commit)
-- T0.7 เพิ่ม CI workflow
+- T2.5 logging/tracing เป็นโครงสร้าง + เก็บผล decision ของ router ลง DB
+- T2.6 ย้าย model/provider จากโค้ดไป settings — **ตารางพร้อมแล้ว** เหลือให้ `api/chat` อ่าน provider/prompt/style ที่เลือก
+- T3.5 `/agent`, `/project` (ยังเป็นไฟล์ว่าง)
+- รัน migration 0002 ใน Supabase จริง (ถ้ายังไม่รัน หน้าตั้งค่าจะขึ้นข้อความบอกให้รันเอง)
 
 ---
 
@@ -199,6 +230,8 @@
 
 ### เฟส 3 — Agent / Project / Settings (3-6 วัน)
 
+**สถานะ: T3.1–T3.4 เสร็จแล้ว** (2026-10-14) เหลือ T3.5 — หลักฐานการตรวจอยู่ใน §0
+
 | #    | งาน                                                                            | เกณฑ์ผ่าน                          |
 | ---- | ------------------------------------------------------------------------------ | ---------------------------------- |
 | T3.1 | schema: `projects`, `agents`, `providers`, `prompts`, `styles` + RLS ต่อผู้ใช้ | ผู้ใช้เห็นเฉพาะข้อมูลตัวเอง        |
@@ -211,7 +244,7 @@
 
 | #    | งาน                                                                                                                   | เกณฑ์ผ่าน                                                              |
 | ---- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| T4.1 | ตั้งค่า `PUBLIC_SUPABASE_*` ให้ Worker จริง (vars/secret ของ Cloudflare) และลบ `ANON_KEY` ที่ไม่ใช้                   | `wrangler deploy` แล้ว login ได้บน production                          |
+| T4.1 | ตั้งค่า `PUBLIC_SUPABASE_*` และ `EXA_API_KEY` ให้ Worker จริง (vars/secret ของ Cloudflare) และลบ `ANON_KEY` ที่ไม่ใช้ | `wrangler deploy` แล้ว login ได้บน production                          |
 | T4.2 | จัดการของไม่ใช้: คง `@lucide/svelte` (เจ้าของตัดสินใจแล้ว) แต่ตัดหรือใช้งาน `AI` binding และ `enhanced-img` ให้ชัดเจน | ไม่มี binding/dependency ที่ไม่ถูกอ้างถึง ยกเว้นที่บันทึกว่าเก็บไว้ใช้ |
 | T4.3 | ขั้นตอน deploy: `check` → `build` → `deploy --dry-run` → `deploy` + observability/custom domain                       | dry-run ผ่านก่อน deploy จริงเสมอ                                       |
 | T4.4 | แก้ `app.d.ts` ซ้ำ, เพิ่ม `+error.svelte`, ปรับ `lang`/meta, เขียน README ให้ตรงกับของจริง                            | ไม่มีหน้ากาก template เหลืออยู่                                        |

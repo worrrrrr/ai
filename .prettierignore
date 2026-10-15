@@ -10,4 +10,8 @@ bun.lockb
 
 # Generated files (ห้ามแก้ด้วยมือ)
 worker-configuration.d.ts
+src/lib/database.types.ts
 .svelte-kit/
+supabase/.temp/
+.opencode/package.json
+.opencode/package-lock.json
